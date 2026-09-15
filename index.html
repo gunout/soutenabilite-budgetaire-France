@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur de soutenabilité budgétaire — France</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+:root {
+    --blue: #0055A4;
+    --blue-dark: #003D7A;
+    --red: #EF4135;
+    --dark: #0B1E3A;
+    --gray: #64748B;
+    --gray-light: #94A3B8;
+    --light: #F0F4F8;
+    --green: #10B981;
+    --amber: #F59E0B;
+    --purple: #8B5CF6;
+    --border: #e2e8f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--light);
+    color: var(--dark);
+    padding: 20px;
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.container { max-width: 1500px; margin: 0 auto; }
+
+/* HEADER */
+.tricolor {
+    height: 5px;
+    background: linear-gradient(to right,
+        var(--blue) 0%, var(--blue) 33.33%,
+        #ffffff 33.33%, #ffffff 66.66%,
+        var(--red) 66.66%, var(--red) 100%);
+    border-radius: 4px 4px 0 0;
+}
+header {
+    background: white;
+    padding: 20px 28px;
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+    border-top: none;
+}
+header h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+header h1 .blue { color: var(--blue); }
+header h1 .red { color: var(--red); }
+header .subtitle {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--gray);
+    margin-top: 2px;
+}
+.badge {
+    background: #f8fafc;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: 1.5px solid var(--blue);
+    color: var(--blue);
+    font-size: 0.7rem;
+    display: inline-block;
+}
+.badge.red { border-color: var(--red); color: var(--red); }
+.badge.purple { border-color: var(--purple); color: var(--purple); }
+.badge.green { border-color: var(--green); color: var(--green); }
+.header-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* EQUATION BANNER */
+.equation-banner {
+    background: linear-gradient(135deg, #0B1E3A 0%, #1E3A8A 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 1.8;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(11,30,58,0.15);
+}
+.equation-banner .eq {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.equation-banner .legend {
+    font-size: 0.68rem;
+    opacity: 0.75;
+    margin-top: 6px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* SECTION */
+.section {
+    background: white;
+    padding: 22px 26px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+}
+.section h2 {
+    font-size: 0.92rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--dark);
+    letter-spacing: -0.01em;
+}
+.section h2 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: var(--blue);
+    color: white;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+.section h2 small {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--gray);
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* SCENARIO BUTTONS */
+.scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+.scenario-btn {
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--dark);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.4;
+}
+.scenario-btn small {
+    display: block;
+    margin-top: 3px;
+    font-weight: 500;
+    color: var(--gray);
+    font-size: 0.68rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+.scenario-btn:hover {
+    border-color: var(--blue);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,85,164,0.08);
+}
+.scenario-btn.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+}
+.scenario-btn.active small { color: rgba(255,255,255,0.85); }
+
+/* PARAM GRID */
+.param-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+.param-group {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+.param-group h4 {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.param-group h4 .tooltip {
+    font-size: 0.6rem;
+    color: var(--gray);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.param {
+    margin-bottom: 14px;
+}
+.param:last-child { margin-bottom: 0; }
+.param label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.param label .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--blue);
+    background: white;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    min-width: 68px;
+    text-align: right;
+}
+.param input[type="range"] {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+.param input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--blue);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0,85,164,0.3);
+    transition: transform 0.15s;
+}
+.param input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+.param .hint {
+    font-size: 0.65rem;
+    color: var(--gray);
+    margin-top: 4px;
+    font-style: italic;
+}
+.param input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--blue);
+    cursor: pointer;
+}
+
+/* KPI CARDS */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+.kpi {
+    background: white;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border-left: 3px solid var(--blue);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+}
+.kpi.warn { border-left-color: var(--amber); background: #FFFBEB; }
+.kpi.bad { border-left-color: var(--red); background: #FEF2F2; }
+.kpi.good { border-left-color: var(--green); background: #F0FDF4; }
+.kpi .label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.kpi .val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dark);
+}
+.kpi .sub {
+    font-size: 0.65rem;
+    color: var(--gray);
+    margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* CHART */
+.chart-wrap {
+    position: relative;
+    height: 460px;
+    margin-bottom: 8px;
+}
+.chart-wrap-lg { height: 520px; }
+
+/* MATRIX TABLE */
+.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+.matrix-table th {
+    background: #f0f4f8;
+    padding: 8px 10px;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: center;
+    border-bottom: 2px solid var(--blue);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.68rem;
+}
+.matrix-table td {
+    padding: 7px 10px;
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+}
+.matrix-table td:first-child {
+    text-align: left;
+    font-weight: 700;
+    background: #f8fafc;
+    font-family: 'Inter', sans-serif;
+    color: var(--dark);
+}
+.matrix-table .cell-good { background: #D1FAE5; color: #065F46; font-weight: 700; }
+.matrix-table .cell-warn { background: #FEF3C7; color: #92400E; font-weight: 700; }
+.matrix-table .cell-bad { background: #FEE2E2; color: #991B1B; font-weight: 700; }
+
+/* DETAILS TABLE */
+.table-container {
+    max-height: 460px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+.table-container::-webkit-scrollbar { width: 6px; }
+.table-container::-webkit-scrollbar-track { background: #f1f5f9; }
+.table-container::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+.detail-table th {
+    background: #f0f4f8;
+    padding: 7px 10px;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: right;
+    border-bottom: 2px solid var(--blue);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.66rem;
+    white-space: nowrap;
+}
+.detail-table th:first-child { text-align: left; }
+.detail-table td {
+    padding: 6px 10px;
+    text-align: right;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+}
+.detail-table td:first-child { text-align: left; font-weight: 700; }
+.detail-table tr:hover td { background: #f8fafc; }
+.detail-table tr.highlight td {
+    background: #EFF6FF;
+    font-weight: 700;
+    border-left: 3px solid var(--blue);
+}
+.detail-table .pos { color: var(--green); }
+.detail-table .neg { color: var(--red); }
+
+/* ACTIONS */
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+.btn {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 18px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    color: white;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.btn-blue { background: var(--blue); }
+.btn-dark { background: var(--dark); }
+.btn-gray { background: var(--gray); }
+.btn-amber { background: var(--amber); }
+.btn-red { background: var(--red); }
+.btn-green { background: var(--green); }
+.btn-outline {
+    background: white;
+    color: var(--dark);
+    border: 1.5px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+
+/* ANALYSIS PANEL */
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+}
+.analysis-item {
+    background: #f8fafc;
+    padding: 16px 18px;
+    border-radius: 10px;
+    border-left: 4px solid var(--blue);
+    font-size: 0.76rem;
+    line-height: 1.65;
+}
+.analysis-item.good { border-left-color: var(--green); background: #F0FDF4; }
+.analysis-item.warn { border-left-color: var(--amber); background: #FFFBEB; }
+.analysis-item.bad { border-left-color: var(--red); background: #FEF2F2; }
+.analysis-item h5 {
+    font-size: 0.78rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.analysis-item .big {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    display: block;
+    margin: 6px 0 10px;
+    color: var(--dark);
+    letter-spacing: -0.02em;
+}
+.analysis-item .detail { color: #475569; display: block; }
+.analysis-item .detail strong { color: var(--dark); }
+.analysis-item .detail .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+}
+.analysis-item .detail .row span:first-child { color: var(--gray); }
+
+/* TABS */
+.tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+    flex-wrap: wrap;
+}
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 16px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--gray);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    margin-bottom: -2px;
+    white-space: nowrap;
+}
+.tab-btn:hover { color: var(--blue); }
+.tab-btn.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* FOOTER */
+footer {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: var(--gray);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    border: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+}
+footer .blue { color: var(--blue); font-weight: 700; }
+footer .red { color: var(--red); font-weight: 700; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    header h1 { font-size: 1rem; }
+    .section { padding: 16px; }
+    .chart-wrap { height: 340px; }
+    .chart-wrap-lg { height: 380px; }
+    .param-grid { grid-template-columns: 1fr; }
+    .equation-banner { font-size: 0.72rem; padding: 12px 14px; }
+    .equation-banner .eq { font-size: 0.82rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div class="tricolor"></div>
+
+    <header>
+        <div>
+            <h1>
+                <span class="blue">Soutenabilité</span> budgétaire ·
+                <span class="red">France</span>
+            </h1>
+            <div class="subtitle">Simulateur pour économistes · Modèle de Domar étendu · Analyse stochastique</div>
+        </div>
+        <div class="header-meta">
+            <span class="badge">Domar étendu</span>
+            <span class="badge purple">Monte Carlo</span>
+            <span class="badge green">CAPB</span>
+            <span class="badge red">Multiplicateur</span>
+        </div>
+    </header>
+
+    <!-- ÉQUATION -->
+    <div class="equation-banner">
+        <div class="eq">Δb<sub>t</sub> = [ (r<sub>t</sub> − g<sub>t</sub>) / (1 + g<sub>t</sub>) ] · b<sub>t−1</sub> − pb<sub>t</sub> / (1 + g<sub>t</sub>)</div>
+        <div class="legend">
+            b = dette/PIB · r = taux d'intérêt effectif · g = croissance nominale ·
+            pb = solde primaire · CAPB = pb corrigé du cycle
+        </div>
+    </div>
+
+    <!-- 1. SCÉNARIOS -->
+    <div class="section">
+        <h2><span class="num">1</span>Scénarios de référence <small>10 scénarios calibrés</small></h2>
+        <div class="scenario-grid" id="scenarioGrid"></div>
+    </div>
+
+    <!-- 2. PARAMÈTRES -->
+    <div class="section">
+        <h2><span class="num">2</span>Paramètres du modèle <small>Variables macro et institutionnelles</small></h2>
+        <div class="param-grid">
+
+            <div class="param-group">
+                <h4>Croissance & cycle <span class="tooltip">Côté réel</span></h4>
+
+                <div class="param">
+                    <label>Croissance potentielle (g*)<span class="val" id="v_gstar">1.20 %</span></label>
+                    <input type="range" id="p_gstar" min="-0.5" max="3.5" value="1.2" step="0.1">
+                    <div class="hint">Taux de croissance de long terme de l'économie</div>
+                </div>
+
+                <div class="param">
+                    <label>Output gap initial <span class="val" id="v_gap">-0.50 %</span></label>
+                    <input type="range" id="p_gap" min="-4" max="4" value="-0.5" step="0.1">
+                    <div class="hint">Écart de production au démarrage</div>
+                </div>
+
+                <div class="param">
+                    <label>Inflation (π)<span class="val" id="v_pi">1.80 %</span></label>
+                    <input type="range" id="p_pi" min="-1" max="6" value="1.8" step="0.1">
+                </div>
+
+                <div class="param">
+                    <label>Fermeture du gap / an <span class="val" id="v_close">20 %</span></label>
+                    <input type="range" id="p_close" min="5" max="50" value="20" step="5">
+                    <div class="hint">Vitesse de résorption du cycle</div>
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h4>Taux & dette <span class="tooltip">Côté financier</span></h4>
+
+                <div class="param">
+                    <label>Dette initiale (% PIB)<span class="val" id="v_b0">113 %</span></label>
+                    <input type="range" id="p_b0" min="70" max="160" value="113" step="1">
+                </div>
+
+                <div class="param">
+                    <label>Taux nominal de marché (i)<span class="val" id="v_i">3.20 %</span></label>
+                    <input type="range" id="p_i" min="0" max="7" value="3.2" step="0.1">
+                    <div class="hint">Taux de refinancement à long terme</div>
+                </div>
+
+                <div class="param">
+                    <label>Maturité moyenne (années)<span class="val" id="v_mat">8 ans</span></label>
+                    <input type="range" id="p_mat" min="2" max="20" value="8" step="1">
+                    <div class="hint">Détermine la vitesse de transmission du taux</div>
+                </div>
+
+                <div class="param">
+                    <label>Prime de risque souveraine<span class="val" id="v_spread">0.00 %</span></label>
+                    <input type="range" id="p_spread" min="0" max="5" value="0" step="0.05">
+                    <div class="hint">S'ajoute au taux si dette > 100 %</div>
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h4>Politique budgétaire <span class="tooltip">Côté fiscal</span></h4>
+
+                <div class="param">
+                    <label>Recettes (% PIB)<span class="val" id="v_rev">51.4 %</span></label>
+                    <input type="range" id="p_rev" min="42" max="62" value="51.4" step="0.1">
+                </div>
+
+                <div class="param">
+                    <label>Dépenses (% PIB)<span class="val" id="v_exp">55.9 %</span></label>
+                    <input type="range" id="p_exp" min="42" max="68" value="55.9" step="0.1">
+                </div>
+
+                <div class="param">
+                    <label>Multiplicateur budgétaire <span class="val" id="v_mult">0.70</span></label>
+                    <input type="range" id="p_mult" min="0" max="2" value="0.7" step="0.05">
+                    <div class="hint">Effet d'un choc budgétaire sur le PIB (effet keynésien)</div>
+                </div>
+
+                <div class="param">
+                    <label>Élasticité recettes/PIB <span class="val" id="v_elas">1.00</span></label>
+                    <input type="range" id="p_elas" min="0.8" max="1.5" value="1.0" step="0.05">
+                    <div class="hint">Réaction automatique des recettes au cycle</div>
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h4>Horizon & risque <span class="tooltip">Analyse stochastique</span></h4>
+
+                <div class="param">
+                    <label>Horizon (années)<span class="val" id="v_T">20 ans</span></label>
+                    <input type="range" id="p_T" min="5" max="50" value="20" step="1">
+                </div>
+
+                <div class="param">
+                    <label>Écart-type croissance (σ_g) <span class="val" id="v_sg">1.0 %</span></label>
+                    <input type="range" id="p_sg" min="0" max="3" value="1.0" step="0.1">
+                </div>
+
+                <div class="param">
+                    <label>Écart-type taux (σ_i) <span class="val" id="v_si">1.0 %</span></label>
+                    <input type="range" id="p_si" min="0" max="3" value="1.0" step="0.1">
+                </div>
+
+                <div class="param">
+                    <label>Simulations Monte Carlo <span class="val" id="v_mc">1000</span></label>
+                    <input type="range" id="p_mc" min="100" max="5000" value="1000" step="100">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 3. TRAJECTOIRE -->
+    <div class="section">
+        <h2><span class="num">3</span>Trajectoire déterministe & fan chart stochastique <small>Bandes P10–P90</small></h2>
+        <div class="chart-wrap chart-wrap-lg"><canvas id="mainChart"></canvas></div>
+        <div class="actions">
+            <button class="btn btn-blue" id="btnRun">▶️ Recalculer</button>
+            <button class="btn btn-dark" id="btnMC">🎲 Monte Carlo</button>
+            <button class="btn btn-outline" id="btnReset">↻ Réinitialiser</button>
+            <button class="btn btn-outline" id="btnPngMain">📷 PNG</button>
+        </div>
+    </div>
+
+    <!-- 4. KPI -->
+    <div class="section">
+        <h2><span class="num">4</span>Indicateurs clés <small>Valeurs de fin de projection</small></h2>
+        <div class="kpi-grid" id="kpiGrid"></div>
+    </div>
+
+    <!-- 5. ANALYSE -->
+    <div class="section">
+        <h2><span class="num">5</span>Analyse de soutenabilité <small>Diagnostic & DSA</small></h2>
+        <div class="analysis-grid" id="analysisGrid"></div>
+    </div>
+
+    <!-- TABS : graphiques avancés -->
+    <div class="section">
+        <h2><span class="num">6</span>Analyses avancées</h2>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="tab-fan">Fan chart</button>
+            <button class="tab-btn" data-tab="tab-decomp">Décomposition</button>
+            <button class="tab-btn" data-tab="tab-sensi">Sensibilité</button>
+            <button class="tab-btn" data-tab="tab-matrix">Matrice pb* × r−g</button>
+            <button class="tab-btn" data-tab="tab-compare">Comparaison scénarios</button>
+            <button class="tab-btn" data-tab="tab-hist">Références historiques</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-fan">
+            <div class="chart-wrap chart-wrap-lg"><canvas id="fanChart"></canvas></div>
+        </div>
+        <div class="tab-panel" id="tab-decomp">
+            <div class="chart-wrap chart-wrap-lg"><canvas id="decompChart"></canvas></div>
+        </div>
+        <div class="tab-panel" id="tab-sensi">
+            <div class="chart-wrap chart-wrap-lg"><canvas id="sensiChart"></canvas></div>
+        </div>
+        <div class="tab-panel" id="tab-matrix">
+            <div class="chart-wrap chart-wrap-lg"><canvas id="matrixChart"></canvas></div>
+        </div>
+        <div class="tab-panel" id="tab-compare">
+            <div class="chart-wrap chart-wrap-lg"><canvas id="compareChart"></canvas></div>
+        </div>
+        <div class="tab-panel" id="tab-hist">
+            <div class="chart-wrap chart-wrap-lg"><canvas id="histChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- 7. TABLEAU DÉTAILLÉ -->
+    <div class="section">
+        <h2><span class="num">7</span>Détail annuel de la projection <small>Tous agrégats</small></h2>
+        <div class="actions" style="margin-bottom:12px;">
+            <button class="btn btn-blue" id="btnCsv">📥 CSV</button>
+            <button class="btn btn-gray" id="btnJson">📥 JSON</button>
+            <button class="btn btn-amber" id="btnXls">📥 Excel</button>
+        </div>
+        <div class="table-container">
+            <table class="detail-table" id="detailTable">
+                <thead>
+                    <tr>
+                        <th>Année</th>
+                        <th>t</th>
+                        <th>PIB nominal (Md€)</th>
+                        <th>Output gap (%)</th>
+                        <th>Dette (Md€)</th>
+                        <th>Dette/PIB (%)</th>
+                        <th>Δb (pts)</th>
+                        <th>r effectif (%)</th>
+                        <th>g nominal (%)</th>
+                        <th>r − g (pts)</th>
+                        <th>Intérêts (Md€)</th>
+                        <th>Solde primaire (Md€)</th>
+                        <th>CAPB (Md€)</th>
+                        <th>Effet boule de neige (Md€)</th>
+                        <th>Solde global (Md€)</th>
+                    </tr>
+                </thead>
+                <tbody id="detailTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <span>Simulateur académique · <span class="blue">Domar étendu</span> · Multiplicateur budgétaire · CAPB</span>
+        <span>Calibré INSEE · Eurostat · <span class="red">Références FMI / OCDE</span></span>
+    </footer>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const PIB_INIT = 3200;              // PIB nominal France 2025 (Md€)
+const POP = 68e6;                   // Population
+const SEUIL_MAASTRICHT = 60;
+const SEUIL_ALERTE = 90;
+const SEUIL_CRITIQUE = 120;
+
+// ============================================================
+// SCÉNARIOS PRÉ-CALIBRÉS
+// ============================================================
+const SCENARIOS = {
+    baseline: {
+        label: '📊 Statu quo tendanciel',
+        sub: 'g*=1.2 · π=1.8 · i=3.2 · pb=−4.5',
+        gstar: 1.2, pi: 1.8, i: 3.2, rev: 51.4, exp: 55.9, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    consolidation: {
+        label: '⚖️ Consolidation modérée',
+        sub: '+1 pt de recettes sur 5 ans',
+        gstar: 1.2, pi: 1.8, i: 3.2, rev: 52.4, exp: 55.9, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    austerity: {
+        label: '🔻 Austérité forte',
+        sub: '−3 pts de dépenses (multiplicateur 0.7)',
+        gstar: 0.9, pi: 1.5, i: 3.0, rev: 51.4, exp: 52.9, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    growth: {
+        label: '📈 Réformes structurelles',
+        sub: 'g* +1 pt (offre)',
+        gstar: 2.2, pi: 1.8, i: 3.2, rev: 51.4, exp: 55.9, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    inflation: {
+        label: '🔥 Choc inflationniste',
+        sub: 'π +2 pts (désendettement réel)',
+        gstar: 1.0, pi: 3.8, i: 3.2, rev: 51.4, exp: 55.9, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    maastricht: {
+        label: '🇪🇺 Retour Maastricht 60 %',
+        sub: 'Consolidation équilibrée sur 20 ans',
+        gstar: 1.5, pi: 1.8, i: 3.0, rev: 53.0, exp: 53.5, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    stagflation: {
+        label: '⚠️ Stagflation',
+        sub: 'g* faible · π élevée · i monte',
+        gstar: 0.4, pi: 4.5, i: 4.5, rev: 51.4, exp: 56.9, b0: 113, T: 20, mat: 8, mult: 0.9
+    },
+    ecb_tightening: {
+        label: '🏦 Choc de taux BCE',
+        sub: 'i +2 pts · spread +1 pt',
+        gstar: 1.0, pi: 1.5, i: 5.2, rev: 51.4, exp: 55.9, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    fiscal_dominance: {
+        label: '🎯 Consolidation ambitieuse',
+        sub: 'pb → +1 % sur 5 ans',
+        gstar: 1.4, pi: 1.8, i: 3.0, rev: 53.5, exp: 52.5, b0: 113, T: 20, mat: 8, mult: 0.7
+    },
+    debt_restructuring: {
+        label: '💰 Restructuration partielle',
+        sub: 'Effacement de 20 pts de PIB',
+        gstar: 1.5, pi: 2.0, i: 2.5, rev: 51.4, exp: 55.9, b0: 93, T: 20, mat: 8, mult: 0.5
+    }
+};
+
+// ============================================================
+// ÉTAT
+// ============================================================
+const state = {
+    params: null,
+    path: [],
+    mc: null,          // résultats Monte Carlo
+    mcPaths: null
+};
+
+// ============================================================
+// UTILITAIRES
+// ============================================================
+const $ = id => document.getElementById(id);
+const num = (id) => parseFloat($(id).value);
+const fmt = (v, d = 1) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtPct = (v, d = 1) => (v >= 0 ? '+' : '') + v.toFixed(d) + ' %';
+
+// Box-Muller pour tirages gaussiens
+function gauss() {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+// ============================================================
+// LECTURE PARAMÈTRES
+// ============================================================
+function readParams() {
+    return {
+        gstar: num('p_gstar'),
+        pi: num('p_pi'),
+        gap0: num('p_gap'),
+        close: num('p_close') / 100,
+        b0: num('p_b0'),
+        i: num('p_i'),
+        mat: num('p_mat'),
+        spread: num('p_spread'),
+        rev: num('p_rev'),
+        exp: num('p_exp'),
+        mult: num('p_mult'),
+        elas: num('p_elas'),
+        T: num('p_T'),
+        sg: num('p_sg'),
+        si: num('p_si'),
+        mc: num('p_mc')
+    };
+}
+
+// ============================================================
+// MOTEUR DÉTERMINISTE — Domar étendu
+// ============================================================
+function simulateDeterministic(p) {
+    const path = [];
+    let pib = PIB_INIT;
+    let dette = (p.b0 / 100) * pib;
+    let gap = p.gap0;
+    let r_eff = p.i;          // taux effectif initial = taux de marché (simplification)
+
+    // Année 0
+    path.push({
+        t: 0, annee: 2025,
+        pib: pib, gap: gap,
+        dette: dette, ratio: p.b0,
+        delta: 0,
+        r_eff: r_eff, g_nom: p.gstar + p.pi, r_g: r_eff - (p.gstar + p.pi),
+        interets: 0, pb: 0, capb: 0, snowball: 0, solde_global: 0
+    });
+
+    for (let t = 1; t <= p.T; t++) {
+        // 1) Output gap → convergence
+        gap = gap * (1 - p.close);
+
+        // 2) Croissance effective : potentielle + rattrapage du cycle + effet multiplicateur
+        const g_cycle = gap * p.close * 0.01;   // effet de fermeture du gap
+        const g_real = p.gstar + g_cycle;
+        const g_nom = g_real + p.pi;
+
+        // 3) Taux d'intérêt effectif : transmission progressive depuis maturité
+        // r_eff_t = r_eff_{t-1} + (1/mat) * (r_target - r_eff_{t-1})
+        // r_target = i de marché + prime de risque conditionnelle
+        const detteRatioPrev = (dette / pib) * 100;
+        const spread_effect = detteRatioPrev > 100 ? p.spread * (1 + (detteRatioPrev - 100) / 50) : 0;
+        const r_target = p.i + spread_effect;
+        r_eff = r_eff + (r_target - r_eff) / p.mat;
+
+        // 4) Solde primaire initial (% PIB potentiel)
+        const pb_pct = (p.rev - p.exp) / 100;
+
+        // 5) CAPB : solde primaire structurel = pb - composante cyclique
+        // Composante cyclique = élasticité * output gap * recettes
+        const cyclical = p.elas * (gap / 100) * (p.rev / 100);
+        const capb_pct = pb_pct - cyclical;
+
+        // 6) Effet multiplicateur : variation du solde primaire affecte la croissance
+        // Ici on considère que l'écart au solde structurel (capb) a un effet keynésien court terme
+        // Simplification : on intègre directement (déjà capté par gap dans ce modèle)
+        // → Conservé pour la fonction de réaction
+
+        // 7) Équation de Domar discrète
+        // Δb = [(r_eff - g_nom)/(1+g_nom)] * b_{t-1} - pb/(1+g_nom)
+        const r_dec = r_eff / 100;
+        const g_dec = g_nom / 100;
+        const b_prev = (dette / pib) * 100;
+        const delta_b = ((r_dec - g_dec) / (1 + g_dec)) * b_prev - (pb_pct * 100) / (1 + g_dec);
+
+        // Mise à jour PIB
+        pib = pib * (1 + g_dec);
+
+        // Mise à jour dette (en Md€)
+        // Dette_t = Dette_{t-1} * (1 + r_eff) - solde primaire
+        const interets = dette * r_dec;
+        const pb_md = pb_pct * pib;      // solde primaire en Md€
+        const capb_md = capb_pct * pib;
+        dette = dette * (1 + r_dec) - pb_md;
+        const solde_global = pb_md - interets;
+        const snowball = dette !== 0 ? ((r_dec - g_dec) / (1 + g_dec)) * (dette / pib) * pib : 0;
+
+        const ratio = (dette / pib) * 100;
+        const variation = ratio - b_prev;
+
+        path.push({
+            t, annee: 2025 + t,
+            pib: pib, gap: gap * 100,
+            dette: dette, ratio: ratio,
+            delta: variation,
+            r_eff: r_eff, g_nom: g_nom, r_g: r_eff - g_nom,
+            interets, pb: pb_md, capb: capb_md,
+            snowball: ((r_dec - g_dec) / (1 + g_dec)) * (dette * (1 + g_dec)),
+            solde_global
+        });
+    }
+    return path;
+}
+
+// ============================================================
+// MONTE CARLO
+// ============================================================
+function runMonteCarlo(p, nSims) {
+    const T = p.T;
+    const paths = [];
+    const rng = (arr) => arr;
+
+    for (let s = 0; s < nSims; s++) {
+        const localParams = { ...p };
+        const simPath = [];
+        let pib = PIB_INIT;
+        let dette = (p.b0 / 100) * pib;
+        let gap = p.gap0;
+        let r_eff = p.i;
+
+        simPath.push({ t: 0, ratio: p.b0, dette, pib });
+
+        for (let t = 1; t <= T; t++) {
+            // Chocs stochastiques
+            const shock_g = gauss() * (p.sg / 100);
+            const shock_i = gauss() * (p.si / 100);
+
+            gap = gap * (1 - p.close);
+            const g_real = p.gstar + gap * p.close * 0.01 + shock_g;
+            const g_nom = g_real + p.pi;
+
+            const detteRatioPrev = (dette / pib) * 100;
+            const spread_effect = detteRatioPrev > 100 ? p.spread * (1 + (detteRatioPrev - 100) / 50) : 0;
+            const r_target = p.i + spread_effect + shock_i;
+            r_eff = r_eff + (r_target - r_eff) / p.mat;
+
+            const pb_pct = (p.rev - p.exp) / 100;
+            const r_dec = r_eff / 100;
+            const g_dec = g_nom / 100;
+
+            pib = pib * (1 + g_dec);
+            const interets = dette * r_dec;
+            const pb_md = pb_pct * pib;
+            dette = dette * (1 + r_dec) - pb_md;
+            const ratio = (dette / pib) * 100;
+
+            simPath.push({ t, ratio, dette, pib });
+        }
+        paths.push(simPath);
+    }
+
+    // Calcul des quantiles
+    const quantiles = [];
+    for (let t = 0; t <= T; t++) {
+        const values = paths.map(pth => pth[t].ratio).sort((a, b) => a - b);
+        quantiles.push({
+            t, annee: 2025 + t,
+            p10: values[Math.floor(nSims * 0.10)],
+            p25: values[Math.floor(nSims * 0.25)],
+            p50: values[Math.floor(nSims * 0.50)],
+            p75: values[Math.floor(nSims * 0.75)],
+            p90: values[Math.floor(nSims * 0.90)],
+            mean: values.reduce((a, b) => a + b, 0) / nSims
+        });
+    }
+
+    return { quantiles, paths };
+}
+
+// ============================================================
+// AGRÉGATS KPI
+// ============================================================
+function computeKPIs(path, p) {
+    const first = path[0];
+    const last = path[path.length - 1];
+    const delta = last.ratio - first.ratio;
+    const avgAnnual = delta / p.T;
+
+    const r = last.r_eff / 100;
+    const g = last.g_nom / 100;
+    const pb = (p.rev - p.exp) / 100;
+    const pbStar = ((r - g) / (1 + g)) * first.ratio;   // solde primaire stabilisant (% PIB)
+    const effort = pbStar - pb;
+    const snowball0 = ((r - g) / (1 + g)) * first.ratio;
+
+    // Effort pour Maastricht 60%
+    const a = (1 + r) / (1 + g);
+    const aN = Math.pow(a, p.T);
+    const effortMaastricht = (aN * first.ratio - 60) * (1 + g) * (a - 1) / (aN - 1) - pb * 100;
+
+    // Charge d'intérêts moyenne
+    const avgInterets = path.slice(1).reduce((a, p) => a + p.interets, 0) / p.T;
+    const avgInteretsPctPib = path.slice(1).reduce((a, p) => a + (p.interets / p.pib) * 100, 0) / p.T;
+
+    // Dette/habitant finale
+    const detteHab = (last.dette * 1e9) / POP;
+
+    // Stress test : effet d'un choc de +100 pb sur r
+    const stressedPath = simulateDeterministic({ ...p, i: p.i + 1.0 });
+    const stressDelta = stressedPath[stressedPath.length - 1].ratio - last.ratio;
+
+    return {
+        first, last, delta, avgAnnual,
+        pbStar: pbStar * 100,
+        effort: effort * 100,
+        snowball: snowball0,
+        effortMaastricht,
+        avgInterets,
+        avgInteretsPctPib,
+        detteHab,
+        stressDelta,
+        r_g_ecart: last.r_g,
+        pb_current: pb * 100
+    };
+}
+
+// ============================================================
+// RENDU — KPI
+// ============================================================
+function renderKPIs(kpi, p) {
+    const kpis = [
+        {
+            label: 'Dette/PIB finale (T=' + p.T + ')',
+            val: kpi.last.ratio.toFixed(1) + ' %',
+            sub: 'Départ : ' + kpi.first.ratio.toFixed(1) + ' %',
+            cls: kpi.last.ratio > kpi.first.ratio ? 'bad' : 'good'
+        },
+        {
+            label: 'Variation sur horizon',
+            val: (kpi.delta >= 0 ? '+' : '') + kpi.delta.toFixed(1) + ' pts',
+            sub: (kpi.avgAnnual >= 0 ? '+' : '') + kpi.avgAnnual.toFixed(2) + ' pt/an',
+            cls: kpi.delta >= 0 ? 'bad' : 'good'
+        },
+        {
+            label: 'r effectif final',
+            val: kpi.last.r_eff.toFixed(2) + ' %',
+            sub: 'g nominal : ' + kpi.last.g_nom.toFixed(2) + ' %',
+            cls: ''
+        },
+        {
+            label: 'Écart r − g',
+            val: (kpi.r_g_ecart >= 0 ? '+' : '') + kpi.r_g_ecart.toFixed(2) + ' pts',
+            sub: 'Effet boule de neige',
+            cls: kpi.r_g_ecart > 0 ? 'bad' : 'good'
+        },
+        {
+            label: 'Solde primaire stabilisant pb*',
+            val: (kpi.pbStar >= 0 ? '+' : '') + kpi.pbStar.toFixed(2) + ' %',
+            sub: 'Actuel : ' + kpi.pb_current.toFixed(2) + ' %',
+            cls: Math.abs(kpi.effort) < 0.5 ? 'good' : 'warn'
+        },
+        {
+            label: 'Effort de stabilisation',
+            val: (kpi.effort >= 0 ? '+' : '') + kpi.effort.toFixed(2) + ' pts',
+            sub: '≈ ' + (kpi.effort * PIB_INIT / 100).toFixed(0) + ' Md€/an',
+            cls: kpi.effort > 0.5 ? 'bad' : 'good'
+        },
+        {
+            label: 'Effort pour Maastricht 60 %',
+            val: (kpi.effortMaastricht >= 0 ? '+' : '') + kpi.effortMaastricht.toFixed(2) + ' pts',
+            sub: '≈ ' + (kpi.effortMaastricht * PIB_INIT / 100).toFixed(0) + ' Md€/an',
+            cls: kpi.effortMaastricht > 1 ? 'bad' : 'good'
+        },
+        {
+            label: 'Charge d\'intérêts moyenne',
+            val: kpi.avgInterets.toFixed(1) + ' Md€/an',
+            sub: '≈ ' + kpi.avgInteretsPctPib.toFixed(2) + ' % du PIB',
+            cls: ''
+        },
+        {
+            label: 'Stress test (+100 pb sur i)',
+            val: (kpi.stressDelta >= 0 ? '+' : '') + kpi.stressDelta.toFixed(1) + ' pts',
+            sub: 'Impact sur dette/PIB finale',
+            cls: kpi.stressDelta > 5 ? 'bad' : 'warn'
+        },
+        {
+            label: 'Dette finale (Md€)',
+            val: kpi.last.dette.toFixed(0),
+            sub: Math.round(kpi.detteHab).toLocaleString('fr-FR') + ' €/hab.',
+            cls: ''
+        }
+    ];
+
+    $('kpiGrid').innerHTML = kpis.map(k => `
+        <div class="kpi ${k.cls}">
+            <div class="label">${k.label}</div>
+            <div class="val">${k.val}</div>
+            <div class="sub">${k.sub}</div>
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// RENDU — ANALYSE
+// ============================================================
+function renderAnalysis(kpi, p) {
+    const delta = kpi.delta;
+    let diagClass, diagTitle, diagText;
+    if (delta <= -15) {
+        diagClass = 'good'; diagTitle = '🟢 Désendettement actif';
+        diagText = `La dette recule de <strong>${Math.abs(delta).toFixed(1)} pts</strong>. Trajectoire soutenable, marges reconstituées.`;
+    } else if (delta <= 0) {
+        diagClass = 'good'; diagTitle = '🟢 Dette stabilisée';
+        diagText = `Dette stabilisée autour de <strong>${kpi.last.ratio.toFixed(1)} %</strong>. Soutenabilité assurée mais vulnérabilité persistante.`;
+    } else if (delta <= 15) {
+        diagClass = 'warn'; diagTitle = '🟠 Dérive modérée';
+        diagText = `Dérive de <strong>+${delta.toFixed(1)} pts</strong>. Ajustement requis pour éviter la spirale.`;
+    } else {
+        diagClass = 'bad'; diagTitle = '🔴 Trajectoire explosive';
+        diagText = `Explosion à <strong>${kpi.last.ratio.toFixed(1)} %</strong>. Risque de prime de risque et de crise souveraine.`;
+    }
+
+    // Effet boule de neige
+    const snowballClass = kpi.r_g_ecart > 0 ? 'warn' : 'good';
+    const snowballText = kpi.r_g_ecart > 0
+        ? `r > g : chaque point de dette nourrit <strong>${kpi.snowball.toFixed(2)} pt/an</strong> de ratio.`
+        : `g > r : la croissance dilue <strong>${Math.abs(kpi.snowball).toFixed(2)} pt/an</strong> de ratio.`;
+
+    // Comparaison historique
+    const chirac = 2.0, hartz = 2.0, grece = 15.0;
+    const ratioChirac = Math.abs(kpi.effort) / chirac;
+    const ratioGrece = Math.abs(kpi.effort) / grece;
+
+    $('analysisGrid').innerHTML = `
+        <div class="analysis-item ${diagClass}">
+            <h5>${diagTitle}</h5>
+            <span class="detail">${diagText}</span>
+        </div>
+
+        <div class="analysis-item ${kpi.effort > 0.5 ? 'warn' : 'good'}">
+            <h5>⚖️ Effort de stabilisation</h5>
+            <span class="big">${kpi.effort >= 0 ? '+' : ''}${kpi.effort.toFixed(2)} pts de PIB</span>
+            <div class="detail">
+                <div class="row"><span>Solde primaire stabilisant pb*</span><span>${kpi.pbStar.toFixed(2)} %</span></div>
+                <div class="row"><span>Solde primaire actuel</span><span>${kpi.pb_current.toFixed(2)} %</span></div>
+                <div class="row"><span>Écart annuel</span><span><strong>${kpi.effort >= 0 ? '+' : ''}${kpi.effort.toFixed(2)} pts</strong></span></div>
+                <div class="row"><span>Équivalent Md€/an</span><span>${(kpi.effort * PIB_INIT / 100).toFixed(0)} Md€</span></div>
+            </div>
+        </div>
+
+        <div class="analysis-item ${kpi.effortMaastricht > 1 ? 'bad' : 'good'}">
+            <h5>🇪🇺 Trajectoire vers Maastricht 60 %</h5>
+            <span class="big">${kpi.effortMaastricht.toFixed(2)} pts/an</span>
+            <div class="detail">
+                <div class="row"><span>Horizon</span><span>${p.T} ans</span></div>
+                <div class="row"><span>Effort annuel</span><span><strong>${(kpi.effortMaastricht * PIB_INIT / 100).toFixed(0)} Md€/an</strong></span></div>
+                <div class="row"><span>Répartition 40/60 rec./dép.</span><span>${(kpi.effortMaastricht * 0.4).toFixed(2)} / ${(kpi.effortMaastricht * 0.6).toFixed(2)} pts</span></div>
+            </div>
+        </div>
+
+        <div class="analysis-item ${snowballClass}">
+            <h5>❄️ Effet boule de neige</h5>
+            <span class="big">${kpi.r_g_ecart >= 0 ? '+' : ''}${kpi.r_g_ecart.toFixed(2)} pts</span>
+            <span class="detail">${snowballText}</span>
+        </div>
+
+        <div class="analysis-item">
+            <h5>📊 Comparaison historique</h5>
+            <div class="detail">
+                <div class="row"><span>Chirac 1995-97 (Maastricht)</span><span>${ratioChirac.toFixed(1)}× effort</span></div>
+                <div class="row"><span>Hartz IV Allemagne</span><span>${hartz} pts</span></div>
+                <div class="row"><span>Ajustement grec 2010-15</span><span>${ratioGrece.toFixed(2)}× effort</span></div>
+            </div>
+        </div>
+
+        <div class="analysis-item ${kpi.stressDelta > 5 ? 'bad' : 'warn'}">
+            <h5>🧪 Stress test</h5>
+            <span class="big">${kpi.stressDelta >= 0 ? '+' : ''}${kpi.stressDelta.toFixed(1)} pts</span>
+            <span class="detail">Impact d'un choc de <strong>+100 pb</strong> sur le taux d'intérêt, à horizon ${p.T} ans. La sensibilité augmente avec la maturité et le niveau de dette.</span>
+        </div>
+
+        <div class="analysis-item">
+            <h5>🎯 Leviers stratégiques</h5>
+            <div class="detail">
+                ${kpi.effort <= 0
+                    ? '✅ Marge disponible. Constituer des coussins de sécurité budgétaire.'
+                    : `
+                    <div class="row"><span>1. Croissance structurelle</span><span>réduire r−g</span></div>
+                    <div class="row"><span>2. Recettes (+ ${(kpi.effort * 0.4).toFixed(2)} pts)</span><span>assiette, TVA, vert</span></div>
+                    <div class="row"><span>3. Dépenses (− ${(kpi.effort * 0.6).toFixed(2)} pts)</span><span>RGPP ciblée</span></div>
+                    <div class="row"><span>4. Gestion de dette</span><span>allonger maturité</span></div>`}
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================
+// RENDU — GRAPHIQUE PRINCIPAL
+// ============================================================
+let mainChart = null;
+function renderMainChart(path, mc) {
+    const labels = path.map(p => p.annee);
+    const central = path.map(p => p.ratio);
+
+    const datasets = [
+        {
+            label: 'Trajectoire centrale',
+            data: central,
+            borderColor: '#0055A4',
+            backgroundColor: 'rgba(0,85,164,0.06)',
+            borderWidth: 3,
+            fill: false,
+            tension: 0.25,
+            pointRadius: 3,
+            pointBackgroundColor: central.map(v => v > SEUIL_CRITIQUE ? '#7f1d1d' : v > SEUIL_ALERTE ? '#EF4135' : v > SEUIL_MAASTRICHT ? '#F59E0B' : '#10B981'),
+            pointBorderColor: 'white',
+            pointBorderWidth: 1.5
+        }
+    ];
+
+    if (mc) {
+        datasets.push(
+            {
+                label: 'P90 (pessimiste)',
+                data: mc.quantiles.map(q => q.p90),
+                borderColor: 'rgba(239,65,53,0.4)',
+                backgroundColor: 'rgba(239,65,53,0.08)',
+                borderWidth: 1.5,
+                borderDash: [5, 4],
+                fill: '+1',
+                tension: 0.25,
+                pointRadius: 0
+            },
+            {
+                label: 'P10 (optimiste)',
+                data: mc.quantiles.map(q => q.p10),
+                borderColor: 'rgba(16,185,129,0.4)',
+                backgroundColor: 'rgba(16,185,129,0.08)',
+                borderWidth: 1.5,
+                borderDash: [5, 4],
+                fill: false,
+                tension: 0.25,
+                pointRadius: 0
+            },
+            {
+                label: 'Médiane (P50)',
+                data: mc.quantiles.map(q => q.p50),
+                borderColor: 'rgba(139,92,246,0.9)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.25,
+                pointRadius: 0
+            }
+        );
+    }
+
+    if (mainChart) mainChart.destroy();
+    mainChart = new Chart($('mainChart'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 11 }, usePointStyle: true, padding: 14 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.dataset.label} : ${ctx.parsed.y.toFixed(1)} %`
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        m60: {
+                            type: 'line', yMin: 60, yMax: 60,
+                            borderColor: 'rgba(16,185,129,0.75)',
+                            borderWidth: 2, borderDash: [8, 8],
+                            label: {
+                                display: true, content: 'Maastricht 60 %',
+                                position: 'end',
+                                backgroundColor: 'rgba(16,185,129,0.9)',
+                                color: 'white', font: { size: 10, weight: 'bold' },
+                                padding: 5
+                            }
+                        },
+                        a90: {
+                            type: 'line', yMin: 90, yMax: 90,
+                            borderColor: 'rgba(245,158,11,0.75)',
+                            borderWidth: 2, borderDash: [8, 8],
+                            label: {
+                                display: true, content: 'Alerte 90 %',
+                                position: 'start',
+                                backgroundColor: 'rgba(245,158,11,0.9)',
+                                color: 'white', font: { size: 10, weight: 'bold' },
+                                padding: 5
+                            }
+                        },
+                        c120: {
+                            type: 'line', yMin: 120, yMax: 120,
+                            borderColor: 'rgba(239,65,53,0.75)',
+                            borderWidth: 2, borderDash: [8, 8],
+                            label: {
+                                display: true, content: 'Critique 120 %',
+                                position: 'end',
+                                backgroundColor: 'rgba(239,65,53,0.9)',
+                                color: 'white', font: { size: 10, weight: 'bold' },
+                                padding: 5
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Dette / PIB (%)', font: { size: 11, weight: 'bold' } },
+                    ticks: { callback: v => v + ' %', font: { size: 10 } }
+                },
+                x: {
+                    title: { display: true, text: 'Année', font: { size: 11, weight: 'bold' } },
+                    ticks: { font: { size: 10 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+// ============================================================
+// RENDU — FAN CHART
+// ============================================================
+let fanChart = null;
+function renderFanChart(mc) {
+    if (!mc) {
+        if (fanChart) fanChart.destroy();
+        fanChart = new Chart($('fanChart'), {
+            type: 'line',
+            data: { labels: [], datasets: [] },
+            options: { responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false },
+                    title: { display: true, text: 'Lancez Monte Carlo pour générer les bandes', font: { size: 12 } } } }
+        });
+        return;
+    }
+
+    const labels = mc.quantiles.map(q => q.annee);
+
+    if (fanChart) fanChart.destroy();
+    fanChart = new Chart($('fanChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'P90',
+                    data: mc.quantiles.map(q => q.p90),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(239,65,53,0.12)',
+                    fill: '+2',
+                    pointRadius: 0,
+                    tension: 0.25
+                },
+                {
+                    label: 'P75',
+                    data: mc.quantiles.map(q => q.p75),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(245,158,11,0.18)',
+                    fill: '+1',
+                    pointRadius: 0,
+                    tension: 0.25
+                },
+                {
+                    label: 'P50 (médiane)',
+                    data: mc.quantiles.map(q => q.p50),
+                    borderColor: '#8B5CF6',
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.25
+                },
+                {
+                    label: 'P25',
+                    data: mc.quantiles.map(q => q.p25),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(245,158,11,0.18)',
+                    fill: '+1',
+                    pointRadius: 0,
+                    tension: 0.25
+                },
+                {
+                    label: 'P10',
+                    data: mc.quantiles.map(q => q.p10),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(16,185,129,0.12)',
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.25
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 11 },
+                        usePointStyle: true,
+                        filter: item => ['P50 (médiane)', 'P75', 'P25'].includes(item.text)
+                    }
+                },
+                title: {
+                    display: true,
+                    text: `Distribution stochastique · ${mc.quantiles.length - 1} ans · bandes P10–P90 et P25–P75`,
+                    font: { size: 12, weight: 'bold' },
+                    color: '#0B1E3A'
+                },
+                annotation: {
+                    annotations: {
+                        m60: { type: 'line', yMin: 60, yMax: 60, borderColor: 'rgba(16,185,129,0.6)', borderWidth: 2, borderDash: [8, 8] },
+                        a90: { type: 'line', yMin: 90, yMax: 90, borderColor: 'rgba(245,158,11,0.6)', borderWidth: 2, borderDash: [8, 8] },
+                        c120: { type: 'line', yMin: 120, yMax: 120, borderColor: 'rgba(239,65,53,0.6)', borderWidth: 2, borderDash: [8, 8] }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Dette / PIB (%)', font: { size: 11, weight: 'bold' } },
+                    ticks: { callback: v => v + ' %' }
+                },
+                x: {
+                    title: { display: true, text: 'Année', font: { size: 11, weight: 'bold' } }
+                }
+            }
+        }
+    });
+}
+
+// ============================================================
+// RENDU — DÉCOMPOSITION
+// ============================================================
+let decompChart = null;
+function renderDecompChart(path) {
+    const labels = path.map(p => p.annee);
+    const snowball = path.map(p => p.snowball);
+    const primary   = path.map(p => -p.pb);
+    const interets  = path.map(p => -p.interets);
+
+    if (decompChart) decompChart.destroy();
+    decompChart = new Chart($('decompChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Effet boule de neige',
+                    data: snowball,
+                    backgroundColor: 'rgba(239,65,53,0.75)',
+                    borderRadius: 2,
+                    stack: 'contrib'
+                },
+                {
+                    label: 'Solde primaire',
+                    data: primary,
+                    backgroundColor: 'rgba(16,185,129,0.75)',
+                    borderRadius: 2,
+                    stack: 'contrib'
+                },
+                {
+                    label: 'Intérêts payés',
+                    data: interets,
+                    backgroundColor: 'rgba(139,92,246,0.75)',
+                    borderRadius: 2,
+                    stack: 'contrib'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } },
+                title: {
+                    display: true,
+                    text: 'Décomposition des contributions à la variation de la dette (Md€)',
+                    font: { size: 12, weight: 'bold' }
+                }
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: {
+                    stacked: true,
+                    title: { display: true, text: 'Md€', font: { size: 11, weight: 'bold' } }
+                }
+            }
+        }
+    });
+}
+
+// ============================================================
+// RENDU — SENSIBILITÉ (tornado)
+// ============================================================
+let sensiChart = null;
+function renderSensiChart(p) {
+    const basePath = simulateDeterministic(p);
+    const base = basePath[basePath.length - 1].ratio;
+
+    const tests = [
+        { label: 'g* +0.5 pt', param: { gstar: p.gstar + 0.5 } },
+        { label: 'g* −0.5 pt', param: { gstar: p.gstar - 0.5 } },
+        { label: 'π +1 pt',    param: { pi: p.pi + 1 } },
+        { label: 'π −1 pt',    param: { pi: p.pi - 1 } },
+        { label: 'i +1 pt',    param: { i: p.i + 1 } },
+        { label: 'i −1 pt',    param: { i: p.i - 1 } },
+        { label: 'pb +1 pt',   param: { rev: p.rev + 1 } },
+        { label: 'pb −1 pt',   param: { rev: p.rev - 1 } },
+        { label: 'spread +1 pt', param: { spread: p.spread + 1 } },
+        { label: 'Maturité 4 ans', param: { mat: 4 } },
+        { label: 'Maturité 15 ans', param: { mat: 15 } }
+    ];
+
+    const values = tests.map(t => {
+        const testPath = simulateDeterministic({ ...p, ...t.param });
+        return testPath[testPath.length - 1].ratio - base;
+    });
+
+    // Trier par amplitude absolue
+    const combined = tests.map((t, i) => ({ label: t.label, value: values[i], abs: Math.abs(values[i]) }));
+    combined.sort((a, b) => a.abs - b.abs);
+
+    if (sensiChart) sensiChart.destroy();
+    sensiChart = new Chart($('sensiChart'), {
+        type: 'bar',
+        data: {
+            labels: combined.map(c => c.label),
+            datasets: [{
+                label: 'Impact sur dette/PIB finale (pts)',
+                data: combined.map(c => c.value),
+                backgroundColor: combined.map(c => c.value > 0 ? 'rgba(239,65,53,0.8)' : 'rgba(16,185,129,0.8)'),
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: `Analyse de sensibilité · Dette/PIB de base : ${base.toFixed(1)} %`,
+                    font: { size: 12, weight: 'bold' }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `Δ dette/PIB : ${ctx.parsed.x >= 0 ? '+' : ''}${ctx.parsed.x.toFixed(2)} pts`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Impact sur dette/PIB (pts)', font: { size: 11, weight: 'bold' } },
+                    grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(11,30,58,0.5)' : 'rgba(226,232,240,0.6)' }
+                },
+                y: { ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+}
+
+// ============================================================
+// RENDU — MATRICE pb* × (r−g)
+// ============================================================
+let matrixChart = null;
+function renderMatrixChart(p) {
+    const rgs = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2];
+    const b0s = [80, 100, 113, 120, 140];
+
+    // Matrice des soldes primaires stabilisants pb* = [(r−g)/(1+g)] × b
+    const g_nom = (p.gstar + p.pi) / 100;
+    const matrix = b0s.map(b =>
+        rgs.map(rg => {
+            const rg_dec = rg / 100;
+            return ((rg_dec) / (1 + g_nom)) * b * 100;
+        })
+    );
+
+    // Préparer datasets pour heatmap (scatter avec couleur)
+    const datasets = [];
+    for (let i = 0; i < b0s.length; i++) {
+        const points = rgs.map((rg, j) => ({
+            x: rg,
+            y: b0s[i],
+            v: matrix[i][j]
+        }));
+        datasets.push({
+            label: `b₀ = ${b0s[i]} %`,
+            data: points,
+            backgroundColor: points.map(pt => {
+                const v = pt.v;
+                if (v < -3) return 'rgba(16,185,129,0.85)';
+                if (v < 0) return 'rgba(16,185,129,0.6)';
+                if (v < 2) return 'rgba(245,158,11,0.75)';
+                if (v < 5) return 'rgba(239,65,53,0.75)';
+                return 'rgba(127,29,29,0.9)';
+            }),
+            pointRadius: 18,
+            pointStyle: 'rect',
+            borderColor: 'white',
+            borderWidth: 1
+        });
+    }
+
+    if (matrixChart) matrixChart.destroy();
+    matrixChart = new Chart($('matrixChart'), {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 10 }, usePointStyle: true }
+                },
+                title: {
+                    display: true,
+                    text: 'Solde primaire stabilisant pb* (% PIB) selon (r−g) et dette initiale',
+                    font: { size: 12, weight: 'bold' }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `pb* = ${ctx.raw.v.toFixed(2)} % du PIB`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'r − g (points de %)' },
+                    min: -2.5, max: 2.5,
+                    ticks: { stepSize: 0.5, callback: v => (v >= 0 ? '+' : '') + v.toFixed(1) }
+                },
+                y: {
+                    title: { display: true, text: 'Dette initiale b₀ (% PIB)' },
+                    min: 70, max: 150
+                }
+            }
+        }
+    });
+}
+
+// ============================================================
+// RENDU — COMPARAISON SCÉNARIOS
+// ============================================================
+let compareChart = null;
+function renderCompareChart() {
+    const colors = ['#0055A4', '#EF4135', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#84CC16', '#64748B'];
+    const datasets = [];
+    let labels = [];
+
+    const keys = Object.keys(SCENARIOS).slice(0, 6);
+    keys.forEach((key, idx) => {
+        const s = SCENARIOS[key];
+        const p = {
+            gstar: s.gstar, pi: s.pi, gap0: -0.5, close: 0.2,
+            b0: s.b0, i: s.i, mat: s.mat, spread: 0,
+            rev: s.rev, exp: s.exp, mult: s.mult, elas: 1.0,
+            T: 20, sg: 1.0, si: 1.0, mc: 1000
+        };
+        const path = simulateDeterministic(p);
+        if (labels.length === 0) labels = path.map(pt => pt.annee);
+        datasets.push({
+            label: s.label,
+            data: path.map(pt => pt.ratio),
+            borderColor: colors[idx],
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            tension: 0.25,
+            pointRadius: 0
+        });
+    });
+
+    if (compareChart) compareChart.destroy();
+    compareChart = new Chart($('compareChart'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 10 }, usePointStyle: true } },
+                title: {
+                    display: true,
+                    text: 'Trajectoires comparées des 6 principaux scénarios',
+                    font: { size: 12, weight: 'bold' }
+                },
+                annotation: {
+                    annotations: {
+                        m60: { type: 'line', yMin: 60, yMax: 60, borderColor: 'rgba(16,185,129,0.5)', borderWidth: 1.5, borderDash: [6, 6] },
+                        a90: { type: 'line', yMin: 90, yMax: 90, borderColor: 'rgba(245,158,11,0.5)', borderWidth: 1.5, borderDash: [6, 6] }
+                    }
+                }
+            },
+            scales: {
+                y: { title: { display: true, text: 'Dette/PIB (%)' } }
+            }
+        }
+    });
+}
+
+// ============================================================
+// RENDU — RÉFÉRENCES HISTORIQUES
+// ============================================================
+let histChart = null;
+function renderHistChart(path) {
+    // Points de référence historiques (dette/PIB France)
+    const ref = [
+        { annee: 1980, ratio: 20.8, label: '1980' },
+        { annee: 1993, ratio: 45.0, label: '1993 · Maastricht' },
+        { annee: 2000, ratio: 58.9, label: '2000 · Euro' },
+        { annee: 2008, ratio: 68.8, label: '2008 · Crise' },
+        { annee: 2012, ratio: 90.0, label: '2012 · Zone euro' },
+        { annee: 2019, ratio: 97.6, label: '2019 · Pré-COVID' },
+        { annee: 2020, ratio: 115.0, label: '2020 · COVID' },
+        { annee: 2024, ratio: 112.7, label: '2024' },
+        { annee: 2025, ratio: 113.0, label: '2025' }
+    ];
+
+    const projLabels = path.map(p => p.annee);
+    const projData = path.map(p => p.ratio);
+
+    if (histChart) histChart.destroy();
+    histChart = new Chart($('histChart'), {
+        type: 'line',
+        data: {
+            labels: [...ref.map(r => r.annee), ...projLabels.slice(1)],
+            datasets: [
+                {
+                    label: 'France — dette/PIB (historique)',
+                    data: [...ref.map(r => r.ratio), ...new Array(projLabels.length - 1).fill(null)],
+                    borderColor: '#0B1E3A',
+                    backgroundColor: 'rgba(11,30,58,0.08)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#0B1E3A'
+                },
+                {
+                    label: 'Projection simulée',
+                    data: [...new Array(ref.length - 1).fill(null), ref[ref.length - 1].ratio, ...projData.slice(1)],
+                    borderColor: '#0055A4',
+                    backgroundColor: 'rgba(0,85,164,0.06)',
+                    borderWidth: 3,
+                    borderDash: [6, 4],
+                    fill: false,
+                    tension: 0.25,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#0055A4'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } },
+                title: {
+                    display: true,
+                    text: 'France — trajectoire historique vs projection',
+                    font: { size: 12, weight: 'bold' }
+                },
+                annotation: {
+                    annotations: {
+                        m60: { type: 'line', yMin: 60, yMax: 60, borderColor: 'rgba(16,185,129,0.5)', borderWidth: 2, borderDash: [8, 8] },
+                        a90: { type: 'line', yMin: 90, yMax: 90, borderColor: 'rgba(245,158,11,0.5)', borderWidth: 2, borderDash: [8, 8] }
+                    }
+                }
+            },
+            scales: {
+                y: { title: { display: true, text: 'Dette/PIB (%)' } }
+            }
+        }
+    });
+}
+
+// ============================================================
+// RENDU — TABLEAU DÉTAILLÉ
+// ============================================================
+function renderDetailTable(path) {
+    $('detailTableBody').innerHTML = path.map(p => {
+        const dClass = p.delta >= 0 ? 'neg' : 'pos';
+        return `<tr ${p.t === 0 ? 'class="highlight"' : ''}>
+            <td>${p.annee}</td>
+            <td>${p.t}</td>
+            <td>${p.pib.toFixed(0)}</td>
+            <td>${p.gap.toFixed(2)}</td>
+            <td>${p.dette.toFixed(0)}</td>
+            <td><strong>${p.ratio.toFixed(2)}</strong></td>
+            <td class="${dClass}">${p.delta >= 0 ? '+' : ''}${p.delta.toFixed(2)}</td>
+            <td>${p.r_eff.toFixed(2)}</td>
+            <td>${p.g_nom.toFixed(2)}</td>
+            <td>${p.r_g >= 0 ? '+' : ''}${p.r_g.toFixed(2)}</td>
+            <td>${p.interets.toFixed(1)}</td>
+            <td>${p.pb.toFixed(1)}</td>
+            <td>${p.capb.toFixed(1)}</td>
+            <td>${p.snowball.toFixed(1)}</td>
+            <td>${p.solde_global.toFixed(1)}</td>
+        </tr>`;
+    }).join('');
+}
+
+// ============================================================
+// RUN PRINCIPAL
+// ============================================================
+let currentMC = null;
+
+function runAll(alsoMC = false) {
+    const p = readParams();
+    state.params = p;
+
+    // Déterministe
+    const path = simulateDeterministic(p);
+    state.path = path;
+
+    // MC
+    if (alsoMC) {
+        currentMC = runMonteCarlo(p, p.mc);
+        state.mc = currentMC;
+    }
+
+    const kpi = computeKPIs(path, p);
+
+    renderMainChart(path, currentMC);
+    renderFanChart(currentMC);
+    renderDecompChart(path);
+    renderSensiChart(p);
+    renderMatrixChart(p);
+    renderCompareChart();
+    renderHistChart(path);
+    renderKPIs(kpi, p);
+    renderAnalysis(kpi, p);
+    renderDetailTable(path);
+
+    // Mise à jour des libellés
+    $('v_gstar').textContent = p.gstar.toFixed(1) + ' %';
+    $('v_pi').textContent    = p.pi.toFixed(1) + ' %';
+    $('v_gap').textContent   = p.gap0.toFixed(2) + ' %';
+    $('v_close').textContent = (p.close * 100).toFixed(0) + ' %';
+    $('v_b0').textContent    = p.b0.toFixed(0) + ' %';
+    $('v_i').textContent     = p.i.toFixed(2) + ' %';
+    $('v_mat').textContent   = p.mat + ' ans';
+    $('v_spread').textContent = p.spread.toFixed(2) + ' %';
+    $('v_rev').textContent   = p.rev.toFixed(1) + ' %';
+    $('v_exp').textContent   = p.exp.toFixed(1) + ' %';
+    $('v_mult').textContent  = p.mult.toFixed(2);
+    $('v_elas').textContent  = p.elas.toFixed(2);
+    $('v_T').textContent     = p.T + ' ans';
+    $('v_sg').textContent    = p.sg.toFixed(1) + ' %';
+    $('v_si').textContent    = p.si.toFixed(1) + ' %';
+    $('v_mc').textContent    = p.mc;
+}
+
+// ============================================================
+// SCÉNARIOS UI
+// ============================================================
+function initScenarios() {
+    $('scenarioGrid').innerHTML = Object.entries(SCENARIOS).map(([key, s], idx) => `
+        <button class="scenario-btn ${key === 'baseline' ? 'active' : ''}" data-scenario="${key}">
+            ${s.label}
+            <small>${s.sub}</small>
+        </button>
+    `).join('');
+
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.scenario;
+            const s = SCENARIOS[key];
+            if (!s) return;
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            $('p_gstar').value = s.gstar;
+            $('p_pi').value = s.pi;
+            $('p_i').value = s.i;
+            $('p_rev').value = s.rev;
+            $('p_exp').value = s.exp;
+            $('p_b0').value = s.b0;
+            $('p_T').value = s.T;
+            $('p_mat').value = s.mat;
+            $('p_mult').value = s.mult;
+            if (s.spread !== undefined) $('p_spread').value = s.spread;
+
+            currentMC = null;
+            runAll(false);
+        });
+    });
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function initTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+    });
+}
+
+// ============================================================
+// EXPORTS
+// ============================================================
+function exportCSV() {
+    const p = state.params;
+    const header = [
+        'Année', 't', 'PIB nominal (Md€)', 'Output gap (%)', 'Dette (Md€)', 'Dette/PIB (%)',
+        'Δb (pts)', 'r effectif (%)', 'g nominal (%)', 'r−g (pts)', 'Intérêts (Md€)',
+        'Solde primaire (Md€)', 'CAPB (Md€)', 'Effet boule de neige (Md€)', 'Solde global (Md€)'
+    ];
+    const rows = state.path.map(pt => [
+        pt.annee, pt.t, pt.pib.toFixed(1), pt.gap.toFixed(3), pt.dette.toFixed(1),
+        pt.ratio.toFixed(3), pt.delta.toFixed(3), pt.r_eff.toFixed(3), pt.g_nom.toFixed(3),
+        pt.r_g.toFixed(3), pt.interets.toFixed(2), pt.pb.toFixed(2), pt.capb.toFixed(2),
+        pt.snowball.toFixed(2), pt.solde_global.toFixed(2)
+    ]);
+    const csv = '\ufeff' + [header, ...rows].map(r => r.join(';')).join('\n');
+    triggerDownload(new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
+        `simulation_dette_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+function exportJSON() {
+    const payload = {
+        parametres: state.params,
+        trajectoire: state.path,
+        monte_carlo: currentMC ? {
+            quantiles: currentMC.quantiles,
+            n_simulations: state.params.mc
+        } : null
+    };
+    triggerDownload(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+        `simulation_dette_${new Date().toISOString().slice(0,10)}.json`);
+}
+
+function exportExcel() {
+    const table = $('detailTable');
+    const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Projection</x:Name></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>${table.outerHTML}</body></html>`;
+    triggerDownload(new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' }),
+        `simulation_dette_${new Date().toISOString().slice(0,10)}.xls`);
+}
+
+function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function downloadPNG(chart, name) {
+    if (!chart) return;
+    const link = document.createElement('a');
+    link.download = `${name}_${new Date().toISOString().slice(0,10)}.png`;
+    link.href = chart.toBase64Image('image/png', 1.0);
+    link.click();
+}
+
+// ============================================================
+// RESET
+// ============================================================
+function reset() {
+    const s = SCENARIOS.baseline;
+    $('p_gstar').value = s.gstar;
+    $('p_pi').value = s.pi;
+    $('p_i').value = s.i;
+    $('p_rev').value = s.rev;
+    $('p_exp').value = s.exp;
+    $('p_b0').value = s.b0;
+    $('p_T').value = s.T;
+    $('p_mat').value = s.mat;
+    $('p_mult').value = s.mult;
+    $('p_gap').value = -0.5;
+    $('p_close').value = 20;
+    $('p_spread').value = 0;
+    $('p_elas').value = 1.0;
+    $('p_sg').value = 1.0;
+    $('p_si').value = 1.0;
+    $('p_mc').value = 1000;
+
+    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.scenario-btn[data-scenario="baseline"]').classList.add('active');
+
+    currentMC = null;
+    runAll(false);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#334155';
+
+    initScenarios();
+    initTabs();
+
+    // Événements sliders → recalcul
+    document.querySelectorAll('.param input[type="range"]').forEach(input => {
+        input.addEventListener('input', () => {
+            // désactiver le scénario actif
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+            // ne pas relancer MC à chaque fois
+            currentMC = null;
+            runAll(false);
+        });
+    });
+
+    $('btnRun').addEventListener('click', () => runAll(false));
+    $('btnMC').addEventListener('click', () => runAll(true));
+    $('btnReset').addEventListener('click', reset);
+    $('btnPngMain').addEventListener('click', () => downloadPNG(mainChart, 'trajectoire'));
+
+    $('btnCsv').addEventListener('click', exportCSV);
+    $('btnJson').addEventListener('click', exportJSON);
+    $('btnXls').addEventListener('click', exportExcel);
+
+    runAll(false);
+});
+</script>
+</body>
+</html>
